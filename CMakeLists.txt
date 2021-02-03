@@ -18,7 +18,6 @@ add_compile_options(
 set(CMAKE_C_STANDARD 99)
 
 # BEGIN BUILD LIBTASK
-
 message("Loading headers")
 include_directories(hdrs)
 
@@ -30,7 +29,6 @@ add_library(task SHARED ${LIBTASK_SOURCE_FILES})
 
 message("Linking libraries")
 target_link_libraries(task pthread)
-
 # END BUILD LIBTASK
 
 # BEGIN BUILD TESTS
@@ -47,7 +45,7 @@ list(APPEND MY_TESTS
 foreach(TARGET_TEST ${MY_TESTS})
     message("Adding Test tests/${TARGET_TEST}.c")
     add_executable(${TARGET_TEST} tests/${TARGET_TEST}.c)
-    #target_link_libraries(${TARGET_TEST} task)
+    target_link_libraries(${TARGET_TEST} task)
     add_test(${TARGET_TEST} ${TARGET_TEST})
 endforeach()
 
