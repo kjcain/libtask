@@ -98,6 +98,13 @@ task_t *task_init_with_callback(
 );
 
 /**
+ * @brief executes a task
+ * 
+ * @param task 
+ */
+void task_execute(task_t *task);
+
+/**
  * @brief wait for a task to complete
  * 
  * @param task 

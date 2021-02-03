@@ -132,6 +132,28 @@ task_t *task_init_with_callback(
 }
 
 /**
+ * @brief executes a task
+ * 
+ * @param task 
+ */
+void task_execute(task_t *task)
+{
+    task->status = TASK_STATUS_RUNNING;
+
+    task->result = task->func(task->params);
+
+    task->status = TASK_STATUS_FINISHED;
+    
+    if(task->callback == NULL)
+    {
+        task->callback(task);
+    }
+
+    /* send the completion signal */
+    sem_post(&(task->completion_sem));
+}
+
+/**
  * @brief wait for a task to complete
  * 
  * @param task 
