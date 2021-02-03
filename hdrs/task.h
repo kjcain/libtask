@@ -17,14 +17,19 @@
 #include "task_pool.h"
 
 /**
+ * @brief task object
+ * 
+ */
+typedef struct _task_t task_t;
+
+/**
  * @brief prioritization of the tasks
  * 
  */
 typedef enum _task_priority_t
 {
     TASK_PRIORITY_INDEPENDENT, /*<! spins up new thread to run on */
-    TASK_PRIORITY_ASYNC, /*<! normal task on thread pool */
-    TASK_PRIORITY_RUN_ON_WAIT /*<! lazy task, only runs on wait call */
+    TASK_PRIORITY_ASYNC /*<! normal task on thread pool */
 }
 task_priority_t;
 
@@ -58,11 +63,6 @@ typedef void* task_func_t(void *args);
  */
 typedef void task_callback_func_t(task_t *task);
 
-/**
- * @brief task object
- * 
- */
-typedef struct _task_t task_t;
 
 /**
  * @brief create a new task in the pool
@@ -98,7 +98,7 @@ task_t *task_init_with_callback(
 );
 
 /**
- * @brief wait for a task to complete, run a "RUN_ON_WAIT"
+ * @brief wait for a task to complete
  * 
  * @param task 
  * @return void* 
@@ -125,9 +125,8 @@ task_priority_t task_priority(task_t *task);
  * @brief collect task resources
  * 
  * @param task 
- * @return int 
  */
-int task_free(task_t *task);
+void task_free(task_t *task);
 
 #endif /* TASK_H */
 

@@ -9,7 +9,14 @@
  * 
  */
 
+#include <assert.h>
+#include <stdlib.h>
+#include <semaphore.h> 
+
+#include "task_pool.h"
+
 #include "task.h"
+
 
 /**
  * @brief task object
@@ -17,8 +24,59 @@
  */
 struct _task_t 
 {
-
+    sem_t completion_sem;
+    task_pool_t *pool;
+    task_status_t status;
+    task_priority_t priority;
+    task_func_t *func;
+    void *params;
+    void *result;
+    task_callback_func_t *callback;
 };
+
+/**
+ * @brief build a new task
+ * @note requires: non-null pool and task
+ * @note ensures: task is either successfully built and added to pool, or null is returned
+ * 
+ * @param pool 
+ * @param status 
+ * @param priority 
+ * @param func 
+ * @param params 
+ * @param callback 
+ * @return task_t*
+ */
+task_t *_task_build(
+    task_pool_t *pool, 
+    task_status_t status, 
+    task_priority_t priority, 
+    task_func_t *func, 
+    void* params, 
+    task_callback_func_t *callback)
+{
+    assert(pool != NULL && "pool given is null");
+    assert(func != NULL && "function given is null");
+
+    task_t *task = malloc(sizeof(task_t));
+    assert(task != NULL && "unable to allocate memory for task");
+
+    /* blocked by default, wait calls sem_post, only time it's used */
+    sem_init(&(task->completion_sem), 1, 0);
+    
+    task->pool = pool;
+    task->priority = priority;
+    task->status = status;
+    task->func = func;
+    task->params = params;
+    task->callback = callback;
+
+    task->result = NULL;
+
+    task_pool_add(pool, task);
+
+    return task;
+}
 
 /**
  * @brief create a new task in the pool
@@ -35,7 +93,14 @@ task_t *task_init(
     task_func_t *func,
     void *params)
 {
-
+    return _task_build(
+        pool,
+        TASK_STATUS_WAITING,
+        priority, 
+        func, 
+        params,
+        NULL
+    );
 }
 
 /**
@@ -56,18 +121,30 @@ task_t *task_init_with_callback(
     task_callback_func_t *callback
 )
 {
-
+    return _task_build(
+        pool,
+        TASK_STATUS_WAITING,
+        priority, 
+        func, 
+        params,
+        callback
+    );
 }
 
 /**
- * @brief wait for a task to complete, run a "RUN_ON_WAIT"
+ * @brief wait for a task to complete
  * 
  * @param task 
  * @return void* 
  */
 void *task_wait(task_t *task)
 {
+    /* wait and immediately repost */
+    /* only waiting for the completion signal before continuing */
+    sem_wait(&(task->completion_sem));
+    sem_post(&(task->completion_sem));
 
+    return task->result;
 }
 
 /**
@@ -78,7 +155,7 @@ void *task_wait(task_t *task)
  */
 task_status_t task_status(task_t *task)
 {
-
+    return task->status;
 }
 
 /**
@@ -89,18 +166,24 @@ task_status_t task_status(task_t *task)
  */
 task_priority_t task_priority(task_t *task)
 {
-
+    return task->priority;
 }
 
 /**
  * @brief collect task resources
+ * @note could be used as a callback for fire-and-forget tasks
  * 
  * @param task 
- * @return int 
  */
-int task_free(task_t *task)
+void task_free(task_t *task)
 {
+    /* wait for the task to finish */
+    task_wait(task);
 
+    sem_destroy(&(task->completion_sem));
+    free(task->params);
+    free(task);
+    task = NULL;
 }
 
 /* end of task.c */
