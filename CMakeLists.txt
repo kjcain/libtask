@@ -13,6 +13,7 @@ add_compile_options(
     -Werror 
     -Wformat-nonliteral
     -pedantic
+    -O3
 )
 
 set(CMAKE_C_STANDARD 99)
@@ -37,9 +38,7 @@ target_link_libraries(task pthread)
 # each test will be named name_in_list.c
 
 list(APPEND MY_TESTS 
-    test_lazy
-    test_task
-    test_async
+    test_threadpool
 )
 
 foreach(TARGET_TEST ${MY_TESTS})
